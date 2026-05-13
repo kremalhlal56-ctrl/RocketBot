@@ -4,7 +4,7 @@ import yt_dlp
 import os
 
 # توكن البوت الخاص بك
-API_TOKEN = '8826770286:AAGuTLiou2TrKkbDHzTt6ThHXkv_E8039k'
+API_TOKEN = '8826770286:AAGuTLioU2TrKkbDHzTt6ThHXKxv_E8039k'
 
 bot = telebot.TeleBot(API_TOKEN)
 
