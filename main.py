@@ -1,35 +1,42 @@
 import telebot
 import requests
+import yt_dlp
+import os
 
-# مفتاح البوت من تلجرام
-CH_TOKEN = "8826770286:AAGuTLioU2TrKkbDHzTt6ThHXKxv_E8039k"
+# توكن البوت الخاص بك
+API_TOKEN = '8826770286:AAGuTLiou2TrKkbDHzTt6ThHXkv_E8039k'
 
-# مفتاح RapidAPI الخاص بك
-RAPID_API_KEY = "a633d09fdbmsh7dfce5a83af7405p1c8b1ajsnddecdfd0d28e"
+bot = telebot.TeleBot(API_TOKEN)
 
-bot = telebot.TeleBot(CH_TOKEN)
-
-@bot.message_handler(commands=['start'])
+@bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
     bot.reply_to(message, "أهلاً بك في بوت الصاروخ للتحميل! 🚀\nأرسل رابط فيديو تيك توك الآن.")
 
 @bot.message_handler(func=lambda message: True)
-def handle_message(message):
-    url = message.text
-    if "tiktok.com" in url:
-        bot.reply_to(message, "جاري معالجة الفيديو... 🚀")
-        api_url = "https://tiktok-video-no-watermark2.p.rapidapi.com/v1/posts"
-        headers = {
-            "X-RapidAPI-Key": RAPID_API_KEY,
-            "X-RapidAPI-Host": "tiktok-video-no-watermark2.p.rapidapi.com"
+def download_video(message):
+    if 'tiktok.com' in message.text:
+        msg = bot.reply_to(message, "🚀 جاري معالجة الفيديو...")
+        
+        ydl_opts = {
+            'format': 'best',
+            'outtmpl': 'video.mp4',
+            'quiet': True,
+            'no_warnings': True
         }
+        
         try:
-            response = requests.get(api_url, headers=headers, params={"url": url})
-            video_link = response.json()['data']['play']
-            bot.send_video(message.chat.id, video_link, caption="تم التحميل بواسطة الصاروخ 🚀")
-        except:
-            bot.reply_to(message, "حدث خطأ، تأكد من الرابط.")
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                ydl.download([message.text])
+            
+            with open('video.mp4', 'rb') as video:
+                bot.send_video(message.chat.id, video, caption="تم التحميل بواسطة بوت الصاروخ 🚀")
+            
+            os.remove('video.mp4')
+            bot.delete_message(message.chat.id, msg.message_id)
+            
+        except Exception as e:
+            bot.edit_message_text("حدث خطأ أثناء التحميل، تأكد من أن الحساب عام وليس خاصاً.", message.chat.id, msg.message_id)
     else:
-        bot.reply_to(message, "أرسل رابط تيك توك صحيح.")
+        bot.reply_to(message, "عذراً، أرسل رابط تيك توك صحيح.")
 
 bot.polling()
